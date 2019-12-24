@@ -343,6 +343,7 @@
                       <option>None</option>
                       <option>Basic</option>
                       <option>Bearer Token</option>
+                      <option>OAuth2.0</option>
                     </select>
                   </span>
                 </li>
@@ -394,6 +395,25 @@
                   />
                 </li>
               </ul>
+              <ul v-else-if="auth === 'OAuth2.0'">
+                <li>
+                  <input
+                    placeholder="Access Token"
+                    name="access_token"
+                    v-model="accessToken"
+                  />
+                </li>
+                <span>
+                  <button
+                    class="icon"
+                    id="show-token"
+                    @click="showToken = true"
+                    v-tooltip.bottom="$t('get_token')"
+                  >
+                    <i class="material-icons">vpn_key</i>
+                  </button>
+                </span>
+              </ul>
               <div class="flex-wrap">
                 <pw-toggle
                   :on="!urlExcludes.auth"
@@ -401,6 +421,148 @@
                 >
                   {{ $t("include_in_url") }}
                 </pw-toggle>
+              </div>
+            </pw-section>
+            <pw-section
+              v-if="showToken"
+              class="red"
+              label="Get New Access Token"
+              ref="getAccessToken"
+            >
+              <ul>
+                <li>
+                  <div class="flex-wrap">
+                    <!-- <h3 class="title">{{ $t("get_token") }}</h3> -->
+                    <div>
+                      <button class="icon" @click="showToken = false">
+                        <i class="material-icons">close</i>
+                      </button>
+                    </div>
+                  </div>
+                </li>
+              </ul>
+              <ul>
+                <li>
+                  <label for="token_name">{{ $t("token_name") }}</label>
+                  <input
+                    id="token_name"
+                    placeholder="Enter a token name..."
+                    name="token_name"
+                    v-model="accessTokenName"
+                    type="text"
+                  />
+                </li>
+              </ul>
+              <ul>
+                <li>
+                  <label for="grant_type">{{ $t("grant_type") }}</label>
+                  <span class="select-wrapper">
+                    <select id="grant_type" v-model="grantType" @change="grantChange">
+                      <option value="code">Authorization Code</option>
+                      <option value="implicit">Implicit</option>
+                      <option value="password">Password Credentials</option>
+                      <option value="client">Client Credentials</option>
+                    </select>
+                  </span>
+                </li>
+              </ul>
+              <ul>
+                <li>
+                  <label for="callback_url">{{ $t("callback_url") }}</label>
+                  <input
+                    id="callback_url"
+                    name="callback_url"
+                    type="url"
+                    v-model="callbackUrl"
+                    placeholder="http://your-application.com/registered/callback"
+                  />     
+                </li>
+              </ul>
+              <ul>
+                <li>
+                  <label for="auth_url">{{ $t("auth_url") }}</label>
+                  <input
+                    id="auth_url"
+                    name="auth_url"
+                    type="url"
+                    v-model="authUrl"
+                    placeholder="https://example.com/login/oauth/authorize"
+                  />     
+                </li>
+              </ul>
+              <ul>
+                <li>
+                  <label for="access_token_url">{{ $t("access_token_url") }}</label>
+                  <input
+                    id="access_token_url"
+                    name="access_token_url"
+                    type="url"
+                    v-model="accessTokenUrl"
+                    placeholder="https://example.com/login/oauth/access_token"
+                  />     
+                </li>
+              </ul>
+              <ul>
+                <li>
+                  <label for="client_id">{{ $t("client_id") }}</label>
+                  <input
+                    id="client_id"
+                    name="client_id"
+                    type="text"
+                    v-model="clientId"
+                    placeholder="Client ID"
+                  />     
+                </li>
+                <li>
+                  <label for="client_secret">{{ $t("client_secret") }}</label>
+                  <input
+                    id="client_secret"
+                    name="client_secret"
+                    type="text"
+                    v-model="clientSecret"
+                    placeholder="Client Secret"
+                  />     
+                </li>
+              </ul>
+              <ul>
+                <li>
+                  <label for="scope">{{ $t("scope") }}</label>
+                  <input
+                    id="scope"
+                    name="scope"
+                    type="text"
+                    v-model="scope"
+                    placeholder="e.g. read:org"
+                  />     
+                </li>
+                <li>
+                  <label for="state">{{ $t("state") }}</label>
+                  <input
+                    id="state"
+                    name="state"
+                    type="text"
+                    v-model="state"
+                    placeholder="State"
+                  />     
+                </li>
+              </ul>
+              <ul>
+                <li>
+                  <label for="client_auth">{{ $t("client_auth") }}</label>
+                  <span class="select-wrapper">
+                    <select id="client_auth" v-model="clientAuth">
+                      <option value="header">Send as Basic Auth header</option>
+                      <option value="body">Send client credentials in body</option>
+                    </select>
+                  </span>
+                </li>
+              </ul>
+              <div class="flex-wrap">
+                <span>
+                  <button class="icon primary" @click="handleAccessTokenRequest">
+                    {{ $t("request_token") }}
+                  </button>
+                </span>
               </div>
             </pw-section>
           </div>
@@ -804,6 +966,155 @@
         </div>
         <div slot="footer"></div>
       </pw-modal>
+
+      <!-- <pw-modal v-if="showToken" @close="showToken = false">
+        <div slot="header">
+          <ul>
+            <li>
+              <div class="flex-wrap">
+                <h3 class="title">{{ $t("get_token") }}</h3>
+                <div>
+                  <button class="icon" @click="showToken = false">
+                    <i class="material-icons">close</i>
+                  </button>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+        <div slot="body">
+          <ul>
+            <li>
+              <label for="token_name">{{ $t("token_name") }}</label>
+              <input
+                id="token_name"
+                placeholder="Enter a token name..."
+                name="token_name"
+                v-model="accessTokenName"
+                type="text"
+              />
+            </li>
+          </ul>
+          <ul>
+            <li>
+              <label for="grant_type">{{ $t("grant_type") }}</label>
+              <span class="select-wrapper">
+                <select id="grant_type" v-model="grantType" @change="grantChange">
+                  <option value="code">Authorization Code</option>
+                  <option value="implicit">Implicit</option>
+                  <option value="password">Password Credentials</option>
+                  <option value="client">Client Credentials</option>
+                </select>
+              </span>
+            </li>
+          </ul>
+          <ul>
+            <li>
+              <label for="callback_url">{{ $t("callback_url") }}</label>
+              <input
+                id="callback_url"
+                name="callback_url"
+                type="url"
+                v-model="callbackUrl"
+                placeholder="http://your-application.com/registered/callback"
+              />     
+            </li>
+          </ul>
+          <ul>
+            <li>
+              <label for="auth_url">{{ $t("auth_url") }}</label>
+              <input
+                id="auth_url"
+                name="auth_url"
+                type="url"
+                v-model="authUrl"
+                placeholder="https://example.com/login/oauth/authorize"
+              />     
+            </li>
+          </ul>
+          <ul>
+            <li>
+              <label for="access_token_url">{{ $t("access_token_url") }}</label>
+              <input
+                id="access_token_url"
+                name="access_token_url"
+                type="url"
+                v-model="accessTokenUrl"
+                placeholder="https://example.com/login/oauth/access_token"
+              />     
+            </li>
+          </ul>
+          <ul>
+            <li>
+              <label for="client_id">{{ $t("client_id") }}</label>
+              <input
+                id="client_id"
+                name="client_id"
+                type="text"
+                v-model="clientId"
+                placeholder="Client ID"
+              />     
+            </li>
+            <li>
+              <label for="client_secret">{{ $t("client_secret") }}</label>
+              <input
+                id="client_secret"
+                name="client_secret"
+                type="text"
+                v-model="clientSecret"
+                placeholder="Client Secret"
+              />     
+            </li>
+          </ul>
+          <ul>
+            <li>
+              <label for="scope">{{ $t("scope") }}</label>
+              <input
+                id="scope"
+                name="scope"
+                type="text"
+                v-model="scope"
+                placeholder="e.g. read:org"
+              />     
+            </li>
+            <li>
+              <label for="state">{{ $t("state") }}</label>
+              <input
+                id="state"
+                name="state"
+                type="text"
+                v-model="state"
+                placeholder="State"
+              />     
+            </li>
+          </ul>
+          <ul>
+            <li>
+              <label for="client_auth">{{ $t("client_auth") }}</label>
+              <span class="select-wrapper">
+                <select id="client_auth" v-model="clientAuth">
+                  <option value="header">Send as Basic Auth header</option>
+                  <option value="body">Send client credentials in body</option>
+                </select>
+              </span>
+            </li>
+          </ul>
+        </div>
+        <div slot="footer">
+          <div class="flex-wrap">
+            <span></span>
+            <span>
+              <button class="icon" @click="showToken = false">
+                Cancel
+              </button>
+              <button class="icon primary" @click="handleAccessTokenRequest">
+                {{ $t("request_token") }}
+              </button>
+            </span>
+          </div>
+        </div>
+      </pw-modal> -->
+
     </div>
   </div>
 </template>
@@ -900,6 +1211,7 @@ export default {
       previewEnabled: false,
       paramsWatchEnabled: true,
       expandResponse: false,
+      showToken: false,
 
       /**
        * These are content types that can be automatically
@@ -1129,6 +1441,7 @@ export default {
       this.httpPassword = newValue.httpPassword;
       this.passwordFieldType = newValue.passwordFieldType;
       this.bearerToken = newValue.bearerToken;
+      this.accessToken = newValue.accessToken;
       this.headers = newValue.headers;
       this.params = newValue.params;
       this.bodyParams = newValue.bodyParams;
@@ -1205,6 +1518,94 @@ export default {
       },
       set(value) {
         this.$store.commit("setState", { value, attribute: "bearerToken" });
+      }
+    },
+    accessToken: {
+      get() {
+        return this.$store.state.request.accessToken;
+      },
+      set(value) {
+        this.$store.commit("setState", { value, attribute: "accessToken" });
+      }
+    },
+    accessTokenName: {
+      get() {
+        return this.$store.state.oauth2.accessTokenName;
+      },
+      set(value) {
+        this.$store.commit("setOauth2", { value, attribute: "accessTokenName" });
+      }
+    },
+    grantType: {
+      get() {
+        return this.$store.state.oauth2.grantType;
+      },
+      set(value) {
+        this.$store.commit("setOauth2", { value, attribute: "grantType" });
+      }
+    },
+    callbackUrl: {
+      get() {
+        return this.$store.state.oauth2.callbackUrl;
+      },
+      set(value) {
+        this.$store.commit("setOauth2", { value, attribute: "callbackUrl" });
+      }
+    },
+    authUrl: {
+      get() {
+        return this.$store.state.oauth2.authUrl;
+      },
+      set(value) {
+        this.$store.commit("setOauth2", { value, attribute: "authUrl" });
+      }
+    },
+    accessTokenUrl: {
+      get() {
+        return this.$store.state.oauth2.accessTokenUrl;
+      },
+      set(value) {
+        this.$store.commit("setOauth2", { value, attribute: "accessTokenUrl" });
+      }
+    },
+    clientId: {
+      get() {
+        return this.$store.state.oauth2.clientId;
+      },
+      set(value) {
+        this.$store.commit("setOauth2", { value, attribute: "clientId" });
+      }
+    },
+    clientSecret: {
+      get() {
+        return this.$store.state.oauth2.clientSecret;
+      },
+      set(value) {
+        this.$store.commit("setOauth2", { value, attribute: "clientSecret" });
+      }
+    },
+    scope: {
+      get() {
+        return this.$store.state.oauth2.scope;
+      },
+      set(value) {
+        this.$store.commit("setOauth2", { value, attribute: "scope" });
+      }
+    },
+    state: {
+      get() {
+        return this.$store.state.oauth2.state;
+      },
+      set(value) {
+        this.$store.commit("setOauth2", { value, attribute: "state" });
+      }
+    },
+    clientAuth: {
+      get() {
+        return this.$store.state.oauth2.clientAuth;
+      },
+      set(value) {
+        this.$store.commit("setOauth2", { value, attribute: "clientAuth" });
       }
     },
     headers: {
@@ -1380,6 +1781,14 @@ export default {
               "')"
           );
         }
+        if (this.auth === "OAuth2.0") {
+          //TODO: Add auth data to Request URL or Request Header
+          requestString.push(
+            "xhr.setRequestHeader('Authorization', 'Bearer " +
+              this.accessToken +
+              "')"
+          );
+        }        
         if (this.headers) {
           this.headers.forEach(element => {
             requestString.push(
@@ -1425,6 +1834,11 @@ export default {
         } else if (this.auth === "Bearer Token") {
           headers.push(
             '    "Authorization": "Bearer ' + this.bearerToken + '",\n'
+          );
+        } else if (this.auth === "OAuth2.0") {
+          //TODO: Add auth data to Request URL or Request Header
+          headers.push(
+            '    "Authorization": "Bearer ' + this.accessToken + '",\n'
           );
         }
         if (["POST", "PUT", "PATCH"].includes(this.method)) {
@@ -1473,6 +1887,11 @@ export default {
         } else if (this.auth === "Bearer Token") {
           requestString.push(
             "  -H 'Authorization: Bearer " + this.bearerToken + "' \\\n"
+          );
+        } else if (this.auth === "OAuth2.0") {
+          //TODO: Add auth data to Request URL or Request Header
+          requestString.push(
+            "  -H 'Authorization: Bearer " + this.accessToken + "' \\\n"
           );
         }
         if (this.headers) {
@@ -1633,6 +2052,9 @@ export default {
       // If the request uses a token for auth, we want to make sure it's sent here.
       if (this.auth === "Bearer Token")
         headers["Authorization"] = `Bearer ${this.bearerToken}`;
+      //TODO: Add auth data to Request URL or Request Header
+      if (this.auth === "OAuth2.0")
+        headers["Authorization"] = `Bearer ${this.accessToken}`;
 
       headers = Object.assign(
         // Clone the app headers object first, we don't want to
@@ -1950,6 +2372,7 @@ export default {
         !this.urlExcludes.httpUser ? "httpUser" : null,
         !this.urlExcludes.httpPassword ? "httpPassword" : null,
         !this.urlExcludes.bearerToken ? "bearerToken" : null,
+        !this.urlExcludes.accessToken ? "accessToken" : null,
         "contentType"
       ]
         .filter(item => item !== null)
@@ -2032,6 +2455,7 @@ export default {
         });
       }
     },
+    handleAccessTokenRequest(){},
     switchVisibility() {
       this.passwordFieldType =
         this.passwordFieldType === "password" ? "text" : "password";
@@ -2043,6 +2467,7 @@ export default {
           this.httpUser = "";
           this.httpPassword = "";
           this.bearerToken = "";
+          this.accessToken = "";
           break;
         case "headers":
           this.headers = [];
@@ -2060,6 +2485,7 @@ export default {
           this.httpUser = "";
           this.httpPassword = "";
           this.bearerToken = "";
+          this.accessToken = "";
           this.headers = [];
           this.params = [];
           this.bodyParams = [];
@@ -2091,6 +2517,7 @@ export default {
         httpPassword: this.httpPassword,
         passwordFieldType: this.passwordFieldType,
         bearerToken: this.bearerToken,
+        accessToken: this.accessToken,
         headers: this.headers,
         params: this.params,
         bodyParams: this.bodyParams,
@@ -2120,6 +2547,7 @@ export default {
         this.urlExcludes.httpUser = excluded;
         this.urlExcludes.httpPassword = excluded;
         this.urlExcludes.bearerToken = excluded;
+        this.urlExcludes.accessToken = excluded;
       } else {
         this.urlExcludes[excludedField] = excluded;
       }
@@ -2131,6 +2559,8 @@ export default {
         ? "application/json"
         : "";
     },
+    //TODO
+    grantChange(){},
     uploadPayload() {
       this.rawInput = true;
       let file = this.$refs.payload.files[0];
@@ -2175,7 +2605,8 @@ export default {
       auth: true,
       httpUser: true,
       httpPassword: true,
-      bearerToken: true
+      bearerToken: true,
+      accessToken: true
     };
 
     if (Object.keys(this.$route.query).length)
@@ -2190,6 +2621,7 @@ export default {
         vm.httpUser,
         vm.httpPassword,
         vm.bearerToken,
+        vm.accessToken,
         vm.headers,
         vm.params,
         vm.bodyParams,

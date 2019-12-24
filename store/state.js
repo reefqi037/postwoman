@@ -9,6 +9,7 @@ export default () => ({
     httpPassword: "",
     passwordFieldType: "password",
     bearerToken: "",
+    accessToken: "",
     headers: [],
     params: [],
     bodyParams: [],
@@ -21,5 +22,17 @@ export default () => ({
     url: "https://rickandmortyapi.com/graphql",
     headers: [],
     query: ""
+  },
+  oauth2: {
+    accessTokenName: "",
+    grantType: "code",
+    callbackUrl: "",
+    authUrl: "",
+    accessTokenUrl: "",
+    clientId: "",
+    clientSecret: "",
+    scope: "",
+    state: "",
+    clientAuth: "header"
   }
 });
