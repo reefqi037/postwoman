@@ -397,22 +397,22 @@
               </ul>
               <ul v-else-if="auth === 'OAuth2.0'">
                 <li>
-                  <input
-                    placeholder="Access Token"
-                    name="access_token"
-                    v-model="accessToken"
-                  />
+                  <div class="flex-wrap">
+                    <input
+                      placeholder="Access Token"
+                      name="access_token"
+                      v-model="accessToken"
+                    />
+                    <button
+                      class="icon"
+                      id="show-token"
+                      @click="showToken = !showToken"
+                      v-tooltip.bottom="$t('get_token')"
+                    >
+                      <i class="material-icons">vpn_key</i>
+                    </button>
+                  </div>
                 </li>
-                <span>
-                  <button
-                    class="icon"
-                    id="show-token"
-                    @click="showToken = true"
-                    v-tooltip.bottom="$t('get_token')"
-                  >
-                    <i class="material-icons">vpn_key</i>
-                  </button>
-                </span>
               </ul>
               <div class="flex-wrap">
                 <pw-toggle
@@ -426,26 +426,40 @@
             <pw-section
               v-if="showToken"
               class="red"
-              label="Get New Access Token"
+              label="Access Token"
               ref="getAccessToken"
             >
               <ul>
                 <li>
                   <div class="flex-wrap">
-                    <!-- <h3 class="title">{{ $t("get_token") }}</h3> -->
+                    <label for="token-name">{{ $t("token_name") }}</label>
                     <div>
-                      <button class="icon" @click="showToken = false">
+                      <button
+                        class="icon"
+                        @click="showAccessTokenCollections = true"
+                        id="show-access-token-collections"
+                        v-tooltip.bottom="$t('manage_access_token')"
+                      >
+                        <i class="material-icons">save</i>
+                      </button>
+                      <button
+                        class="icon"
+                        @click="clearContent('access_token', $event)"
+                        v-tooltip.bottom="'Clear'"
+                      >
+                        <i class="material-icons">clear_all</i>
+                      </button>
+                      <button
+                        class="icon"
+                        @click="showToken = false"
+                        v-tooltip.bottom="'Close'"
+                      >
                         <i class="material-icons">close</i>
                       </button>
                     </div>
                   </div>
-                </li>
-              </ul>
-              <ul>
-                <li>
-                  <label for="token_name">{{ $t("token_name") }}</label>
                   <input
-                    id="token_name"
+                    id="token-name"
                     placeholder="Enter a token name..."
                     name="token_name"
                     v-model="accessTokenName"
@@ -455,9 +469,9 @@
               </ul>
               <ul>
                 <li>
-                  <label for="grant_type">{{ $t("grant_type") }}</label>
+                  <label for="grant-type">{{ $t("grant_type") }}</label>
                   <span class="select-wrapper">
-                    <select id="grant_type" v-model="grantType" @change="grantChange">
+                    <select id="grant-type" v-model="grantType" @change="grantChange">
                       <option value="code">Authorization Code</option>
                       <option value="implicit">Implicit</option>
                       <option value="password">Password Credentials</option>
@@ -468,60 +482,60 @@
               </ul>
               <ul>
                 <li>
-                  <label for="callback_url">{{ $t("callback_url") }}</label>
+                  <label for="callback-url">{{ $t("callback_url") }}</label>
                   <input
-                    id="callback_url"
+                    id="callback-url"
                     name="callback_url"
                     type="url"
                     v-model="callbackUrl"
                     placeholder="http://your-application.com/registered/callback"
-                  />     
+                  />
                 </li>
               </ul>
               <ul>
                 <li>
-                  <label for="auth_url">{{ $t("auth_url") }}</label>
+                  <label for="auth-url">{{ $t("auth_url") }}</label>
                   <input
-                    id="auth_url"
+                    id="auth-url"
                     name="auth_url"
                     type="url"
                     v-model="authUrl"
                     placeholder="https://example.com/login/oauth/authorize"
-                  />     
+                  />
                 </li>
               </ul>
               <ul>
                 <li>
-                  <label for="access_token_url">{{ $t("access_token_url") }}</label>
+                  <label for="access-token-url">{{ $t("access_token_url") }}</label>
                   <input
-                    id="access_token_url"
+                    id="access-token-url"
                     name="access_token_url"
                     type="url"
                     v-model="accessTokenUrl"
                     placeholder="https://example.com/login/oauth/access_token"
-                  />     
+                  />
                 </li>
               </ul>
               <ul>
                 <li>
-                  <label for="client_id">{{ $t("client_id") }}</label>
+                  <label for="client-id">{{ $t("client_id") }}</label>
                   <input
-                    id="client_id"
+                    id="client-id"
                     name="client_id"
                     type="text"
                     v-model="clientId"
                     placeholder="Client ID"
-                  />     
+                  />
                 </li>
                 <li>
-                  <label for="client_secret">{{ $t("client_secret") }}</label>
+                  <label for="client-secret">{{ $t("client_secret") }}</label>
                   <input
-                    id="client_secret"
+                    id="client-secret"
                     name="client_secret"
                     type="text"
                     v-model="clientSecret"
                     placeholder="Client Secret"
-                  />     
+                  />
                 </li>
               </ul>
               <ul>
@@ -533,7 +547,7 @@
                     type="text"
                     v-model="scope"
                     placeholder="e.g. read:org"
-                  />     
+                  />
                 </li>
                 <li>
                   <label for="state">{{ $t("state") }}</label>
@@ -543,27 +557,28 @@
                     type="text"
                     v-model="state"
                     placeholder="State"
-                  />     
+                  />
                 </li>
               </ul>
               <ul>
                 <li>
-                  <label for="client_auth">{{ $t("client_auth") }}</label>
+                  <label for="client-auth">{{ $t("client_auth") }}</label>
                   <span class="select-wrapper">
-                    <select id="client_auth" v-model="clientAuth">
+                    <select id="client-auth" v-model="clientAuth">
                       <option value="header">Send as Basic Auth header</option>
                       <option value="body">Send client credentials in body</option>
                     </select>
                   </span>
                 </li>
               </ul>
-              <div class="flex-wrap">
-                <span>
-                  <button class="icon primary" @click="handleAccessTokenRequest">
-                    {{ $t("request_token") }}
+              <ul>
+                <li>
+                  <button class="icon" @click="handleAccessTokenRequest">
+                    <i class="material-icons">vpn_key</i>
+                    <span>{{ $t("request_token") }}</span>
                   </button>
-                </span>
-              </div>
+                </li>
+              </ul>
             </pw-section>
           </div>
           <input id="tab-two" type="radio" name="options" />
@@ -967,14 +982,14 @@
         <div slot="footer"></div>
       </pw-modal>
 
-      <!-- <pw-modal v-if="showToken" @close="showToken = false">
+      <pw-modal v-if="showAccessTokenCollections" @close="showAccessTokenCollections = false">
         <div slot="header">
           <ul>
             <li>
               <div class="flex-wrap">
-                <h3 class="title">{{ $t("get_token") }}</h3>
+                <h3 class="title">{{ $t("manage_access_token") }}</h3>
                 <div>
-                  <button class="icon" @click="showToken = false">
+                  <button class="icon" @click="showAccessTokenCollections = false">
                     <i class="material-icons">close</i>
                   </button>
                 </div>
@@ -985,118 +1000,12 @@
         <div slot="body">
           <ul>
             <li>
-              <label for="token_name">{{ $t("token_name") }}</label>
-              <input
-                id="token_name"
-                placeholder="Enter a token name..."
-                name="token_name"
-                v-model="accessTokenName"
-                type="text"
-              />
-            </li>
-          </ul>
-          <ul>
-            <li>
-              <label for="grant_type">{{ $t("grant_type") }}</label>
-              <span class="select-wrapper">
-                <select id="grant_type" v-model="grantType" @change="grantChange">
-                  <option value="code">Authorization Code</option>
-                  <option value="implicit">Implicit</option>
-                  <option value="password">Password Credentials</option>
-                  <option value="client">Client Credentials</option>
-                </select>
-              </span>
-            </li>
-          </ul>
-          <ul>
-            <li>
-              <label for="callback_url">{{ $t("callback_url") }}</label>
-              <input
-                id="callback_url"
-                name="callback_url"
-                type="url"
-                v-model="callbackUrl"
-                placeholder="http://your-application.com/registered/callback"
-              />     
-            </li>
-          </ul>
-          <ul>
-            <li>
-              <label for="auth_url">{{ $t("auth_url") }}</label>
-              <input
-                id="auth_url"
-                name="auth_url"
-                type="url"
-                v-model="authUrl"
-                placeholder="https://example.com/login/oauth/authorize"
-              />     
-            </li>
-          </ul>
-          <ul>
-            <li>
-              <label for="access_token_url">{{ $t("access_token_url") }}</label>
-              <input
-                id="access_token_url"
-                name="access_token_url"
-                type="url"
-                v-model="accessTokenUrl"
-                placeholder="https://example.com/login/oauth/access_token"
-              />     
-            </li>
-          </ul>
-          <ul>
-            <li>
-              <label for="client_id">{{ $t("client_id") }}</label>
-              <input
-                id="client_id"
-                name="client_id"
-                type="text"
-                v-model="clientId"
-                placeholder="Client ID"
-              />     
-            </li>
-            <li>
-              <label for="client_secret">{{ $t("client_secret") }}</label>
-              <input
-                id="client_secret"
-                name="client_secret"
-                type="text"
-                v-model="clientSecret"
-                placeholder="Client Secret"
-              />     
-            </li>
-          </ul>
-          <ul>
-            <li>
-              <label for="scope">{{ $t("scope") }}</label>
-              <input
-                id="scope"
-                name="scope"
-                type="text"
-                v-model="scope"
-                placeholder="e.g. read:org"
-              />     
-            </li>
-            <li>
-              <label for="state">{{ $t("state") }}</label>
-              <input
-                id="state"
-                name="state"
-                type="text"
-                v-model="state"
-                placeholder="State"
-              />     
-            </li>
-          </ul>
-          <ul>
-            <li>
-              <label for="client_auth">{{ $t("client_auth") }}</label>
-              <span class="select-wrapper">
-                <select id="client_auth" v-model="clientAuth">
-                  <option value="header">Send as Basic Auth header</option>
-                  <option value="body">Send client credentials in body</option>
-                </select>
-              </span>
+              <textarea
+                id="access-token-list"
+                autofocus
+                rows="8"
+                placeholder="Enter access tokens"
+              ></textarea>
             </li>
           </ul>
         </div>
@@ -1104,16 +1013,16 @@
           <div class="flex-wrap">
             <span></span>
             <span>
-              <button class="icon" @click="showToken = false">
+              <button class="icon" @click="showAccessTokenCollections = false">
                 Cancel
               </button>
-              <button class="icon primary" @click="handleAccessTokenRequest">
-                {{ $t("request_token") }}
+              <button class="icon primary" @click="saveAccessTokens">
+                {{ $t("save_access_token") }}
               </button>
             </span>
           </div>
         </div>
-      </pw-modal> -->
+      </pw-modal>
 
     </div>
   </div>
@@ -1212,6 +1121,7 @@ export default {
       paramsWatchEnabled: true,
       expandResponse: false,
       showToken: false,
+      showAccessTokenCollections: false,
 
       /**
        * These are content types that can be automatically
@@ -1788,7 +1698,7 @@ export default {
               this.accessToken +
               "')"
           );
-        }        
+        }
         if (this.headers) {
           this.headers.forEach(element => {
             requestString.push(
@@ -2455,7 +2365,17 @@ export default {
         });
       }
     },
-    handleAccessTokenRequest(){},
+    handleAccessTokenRequest(){
+      try {
+        this.$toast.info("Access token requested", {
+          icon: "vpn_key"
+        });
+      } catch (e) {
+        this.$toast.error(e, {
+          icon: "code"
+        });
+      }
+    },
     switchVisibility() {
       this.passwordFieldType =
         this.passwordFieldType === "password" ? "text" : "password";
@@ -2468,12 +2388,25 @@ export default {
           this.httpPassword = "";
           this.bearerToken = "";
           this.accessToken = "";
+          this.showToken = false;
           break;
         case "headers":
           this.headers = [];
           break;
         case "parameters":
           this.params = [];
+          break;
+        case "access_token":
+          this.accessTokenName = "";
+          this.grantType = "code";
+          this.callbackUrl = "";
+          this.authUrl = "";
+          this.accessTokenUrl = "";
+          this.clientId = "";
+          this.clientSecret = "";
+          this.scope = "";
+          this.state = "";
+          this.clientAuth = "header";
           break;
         default:
           (this.label = ""),
@@ -2561,6 +2494,16 @@ export default {
     },
     //TODO
     grantChange(){},
+    saveAccessTokens(){
+      try {
+        this.$toast.info("Access tokens saved");
+        this.showAccessTokenCollections = false;
+      } catch (e) {
+        this.$toast.error(e, {
+          icon: "code"
+        });
+      }
+    },
     uploadPayload() {
       this.rawInput = true;
       let file = this.$refs.payload.files[0];
