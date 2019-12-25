@@ -1,3 +1,9 @@
 tasks:
   - init: npm install
     command: npm run dev
+
+vscode:
+  extensions:
+    - octref.vetur@0.22.6:xXCsvthKcTcJhinOkpQTjQ==
+    - CoenraadS.bracket-pair-colorizer@1.0.61:fqPT1sJEqaEdrfXeYbdW+A==
+    - oderwat.indent-rainbow@7.4.0:nth8lnJRnQu9NcWvNc9KPA==
