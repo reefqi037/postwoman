@@ -33,6 +33,7 @@ const parseQueryString = string => {
 
 //////////////////////////////////////////////////////////////////////
 // PKCE HELPER FUNCTIONS
+
 // Generate a secure random string using the browser crypto functions
 const generateRandomString = () => {
   var array = new Uint32Array(28);
@@ -107,11 +108,12 @@ const tokenRequest = async({
   window.location = buildUrl();
 }
 
+//////////////////////////////////////////////////////////////////////
+// OAUTH REDIRECT HANDLING
+
+// Handle the redirect back from the authorization server and
+// get an access token from the token endpoint
 const oauthRedirect = async() => {
-  //////////////////////////////////////////////////////////////////////
-  // OAUTH REDIRECT HANDLING
-  // Handle the redirect back from the authorization server and
-  // get an access token from the token endpoint
   let tokenResponse = '';
   let q = parseQueryString(window.location.search.substring(1));
   // Check if the server returned an error string
@@ -133,7 +135,6 @@ const oauthRedirect = async() => {
           redirect_uri: redirectUri,
           code_verifier: localStorage.getItem('pkce_code_verifier')
         });
-        console.log(tokenResponse);
       } catch (err) {
         console.log(error.error+'\n\n'+error.error_description);
       }
@@ -149,80 +150,3 @@ const oauthRedirect = async() => {
 }
 
 export { tokenRequest, oauthRedirect }
-
-// // Initiate PKCE Auth Code flow when requested
-// const tokenRequest = (tokenReqParams, length) => {
-
-//   // Create and store a random state value
-//   let state = generateRandomString();
-//   localStorage.setItem('pkce_state', state);
-
-//   // Create random string and number for state
-//   const dec2hex = (dec) => {
-//     return ('0' + dec.toString(16)).substr(-2)
-//   };
-
-//   const generateId = (len) => {
-//     let arr = new Uint8Array((len || 40) / 2)
-//     window.crypto.getRandomValues(arr)
-//     return Array.from(arr, dec2hex).join('')
-//   };
-
-//   const {
-//     grantType,
-//     authUrl,
-//     accessTokenUrl,
-//     clientId,
-//     clientSecret,
-//     scope,
-//     clientAuth
-//   } = tokenReqParams;
-
-//   const buildUrl = () => {
-//     let state = generateId(15);
-//     return `${authUrl}?response_type=${grantType}&client_id=${clientId}&redirect_uri=${callbackUrl}&scope=${scope}&state=${state}`;
-//   }
-
-//   const authorize = () => {
-//     let newWindow = open(buildUrl(), '_self');
-
-//     // newWindow.addEventListener('unload', (event) => {
-//     //   console.log('unloaded!');
-//     //   newWindow.opener.postMessage(newWindow.location.href, targetLoc.origin);
-//     // });
-
-//     // newWindow.location = buildUrl();
-//     // newWindow.location = 'https://google.com';
-
-//     // let params = `scrollbars=no,resizable=no,status=no,location=no,toolbar=no,menubar=no,width=500,height=600,left=100,top=100`;
-//     // const authWindow = window.open('', 'Auth', params);
-//     // // authWindow.addEventListener('DOMContentLoaded', (event) => {
-//     // //   console.log('DOM fully loaded and parsed');
-//     // // });
-//     // authWindow.location = buildUrl();
-//     // authWindow.opener.postMessage(authWindow.location.href, targetLoc.origin);
-
-//     // authWindow.onload = function() {
-//     //   console.log('loaded');
-//     //   authWindow.location = buildUrl();
-//     //   authWindow.addEventListener('unload', function(event) {
-//     //     authWindow.opener.postMessage(authWindow.location.href, targetLoc.origin);
-//     //   });
-//     // };
-//     // authWindow.addEventListener('popstate', function(event) {
-//     //   authWindow.opener.postMessage(authWindow.location.href, targetLoc.origin);
-//     // });
-//     // authWindow.location.replace(buildUrl());
-//   };
-
-//   window.addEventListener('message', function(event) {
-//     // console.log(event);
-//     if (event.origin != targetLoc.origin) {
-//       // something from an unknown domain, let's ignore it
-//       return;
-//     }
-//     console.log( 'received: ' + event.data );
-//   });
-
-//   authorize();
-//   return generateId(length);

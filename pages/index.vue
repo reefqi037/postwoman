@@ -1477,7 +1477,7 @@ export default {
     token: {
       get() {
         return this.$store.oauth2.token;
-      }
+      },
       set(value) {
         this.$store.commit("setOauth2", { value, attribute: "token" });
       }
