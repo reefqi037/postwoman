@@ -24,6 +24,7 @@ export default () => ({
     query: ""
   },
   oauth2: {
+    token: [],
     accessTokenName: "",
     grantType: "code",
     callbackUrl: "",

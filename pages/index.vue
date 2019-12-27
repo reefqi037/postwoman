@@ -399,14 +399,21 @@
                 <li>
                   <div class="flex-wrap">
                     <input
+                      id="access-token"
                       placeholder="Access Token"
                       name="access_token"
                       v-model="accessToken"
                     />
                     <button
                       class="icon"
-                      id="show-token"
-                      @click="showToken = !showToken"
+                      @click="showTokenList = !showTokenList"
+                      v-tooltip.bottom="$t('use_token')"
+                    >
+                      <i class="material-icons">input</i>
+                    </button>
+                    <button
+                      class="icon"
+                      @click="showTokenRequest = !showTokenRequest"
                       v-tooltip.bottom="$t('get_token')"
                     >
                       <i class="material-icons">vpn_key</i>
@@ -424,10 +431,10 @@
               </div>
             </pw-section>
             <pw-section
-              v-if="showToken"
+              v-if="showTokenRequest"
               class="red"
-              label="Access Token"
-              ref="getAccessToken"
+              label="Access Token Request"
+              ref="accessTokenRequest"
             >
               <ul>
                 <li>
@@ -436,11 +443,10 @@
                     <div>
                       <button
                         class="icon"
-                        @click="showAccessTokenCollections = true"
-                        id="show-access-token-collections"
-                        v-tooltip.bottom="$t('manage_access_token')"
+                        @click="showTokenRequestList = true"
+                        v-tooltip.bottom="$t('save_token_request')"
                       >
-                        <i class="material-icons">save</i>
+                        <i class="material-icons">library_add</i>
                       </button>
                       <button
                         class="icon"
@@ -451,7 +457,7 @@
                       </button>
                       <button
                         class="icon"
-                        @click="showToken = false"
+                        @click="showTokenRequest = false"
                         v-tooltip.bottom="'Close'"
                       >
                         <i class="material-icons">close</i>
@@ -480,7 +486,7 @@
                   </span>
                 </li>
               </ul>
-              <ul>
+              <!-- <ul>
                 <li>
                   <label for="callback-url">{{ $t("callback_url") }}</label>
                   <input
@@ -491,7 +497,7 @@
                     placeholder="http://your-application.com/registered/callback"
                   />
                 </li>
-              </ul>
+              </ul> -->
               <ul>
                 <li>
                   <label for="auth-url">{{ $t("auth_url") }}</label>
@@ -547,16 +553,6 @@
                     type="text"
                     v-model="scope"
                     placeholder="e.g. read:org"
-                  />
-                </li>
-                <li>
-                  <label for="state">{{ $t("state") }}</label>
-                  <input
-                    id="state"
-                    name="state"
-                    type="text"
-                    v-model="state"
-                    placeholder="State"
                   />
                 </li>
               </ul>
@@ -982,14 +978,14 @@
         <div slot="footer"></div>
       </pw-modal>
 
-      <pw-modal v-if="showAccessTokenCollections" @close="showAccessTokenCollections = false">
+      <pw-modal v-if="showTokenRequestList" @close="showTokenRequestList = false">
         <div slot="header">
           <ul>
             <li>
               <div class="flex-wrap">
-                <h3 class="title">{{ $t("manage_access_token") }}</h3>
+                <h3 class="title">{{ $t("save_token_request") }}</h3>
                 <div>
-                  <button class="icon" @click="showAccessTokenCollections = false">
+                  <button class="icon" @click="showTokenRequestList = false">
                     <i class="material-icons">close</i>
                   </button>
                 </div>
@@ -1001,10 +997,8 @@
           <ul>
             <li>
               <textarea
-                id="access-token-list"
-                autofocus
                 rows="8"
-                placeholder="Enter access tokens"
+                placeholder="Enter request list"
               ></textarea>
             </li>
           </ul>
@@ -1013,11 +1007,51 @@
           <div class="flex-wrap">
             <span></span>
             <span>
-              <button class="icon" @click="showAccessTokenCollections = false">
+              <button class="icon" @click="showTokenRequestList = false">
                 Cancel
               </button>
-              <button class="icon primary" @click="saveAccessTokens">
-                {{ $t("save_access_token") }}
+              <button class="icon primary" @click="saveTokenRequest">
+                {{ $t("save_token_request") }}
+              </button>
+            </span>
+          </div>
+        </div>
+      </pw-modal>
+
+      <pw-modal v-if="showTokenList" @close="showTokenList = false">
+        <div slot="header">
+          <ul>
+            <li>
+              <div class="flex-wrap">
+                <h3 class="title">{{ $t("manage_token") }}</h3>
+                <div>
+                  <button class="icon" @click="showTokenList = false">
+                    <i class="material-icons">close</i>
+                  </button>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+        <div slot="body">
+          <ul>
+            <li>
+              <textarea
+                rows="8"
+                placeholder="Token list"
+              ></textarea>
+            </li>
+          </ul>
+        </div>
+        <div slot="footer">
+          <div class="flex-wrap">
+            <span></span>
+            <span>
+              <button class="icon" @click="showTokenList = false">
+                Cancel
+              </button>
+              <button class="icon primary" @click="saveToken">
+                {{ $t("save_token") }}
               </button>
             </span>
           </div>
@@ -1037,6 +1071,7 @@ import parseCurlCommand from "../assets/js/curlparser.js";
 import getEnvironmentVariablesFromScript from "../functions/preRequest";
 import parseTemplateString from "../functions/templating";
 import AceEditor from "../components/ace-editor";
+import { tokenRequest, oauthRedirect } from "../assets/js/oauth";
 
 const statusCategories = [
   {
@@ -1120,8 +1155,9 @@ export default {
       previewEnabled: false,
       paramsWatchEnabled: true,
       expandResponse: false,
-      showToken: false,
-      showAccessTokenCollections: false,
+      showTokenList: false,
+      showTokenRequest: false,
+      showTokenRequestList: false,
 
       /**
        * These are content types that can be automatically
@@ -1438,6 +1474,14 @@ export default {
         this.$store.commit("setState", { value, attribute: "accessToken" });
       }
     },
+    token: {
+      get() {
+        return this.$store.oauth2.token;
+      }
+      set(value) {
+        this.$store.commit("setOauth2", { value, attribute: "token" });
+      }
+    },
     accessTokenName: {
       get() {
         return this.$store.state.oauth2.accessTokenName;
@@ -1454,14 +1498,14 @@ export default {
         this.$store.commit("setOauth2", { value, attribute: "grantType" });
       }
     },
-    callbackUrl: {
-      get() {
-        return this.$store.state.oauth2.callbackUrl;
-      },
-      set(value) {
-        this.$store.commit("setOauth2", { value, attribute: "callbackUrl" });
-      }
-    },
+    // callbackUrl: {
+    //   get() {
+    //     return this.$store.state.oauth2.callbackUrl;
+    //   },
+    //   set(value) {
+    //     this.$store.commit("setOauth2", { value, attribute: "callbackUrl" });
+    //   }
+    // },
     authUrl: {
       get() {
         return this.$store.state.oauth2.authUrl;
@@ -2365,15 +2409,33 @@ export default {
         });
       }
     },
-    handleAccessTokenRequest(){
-      try {
-        this.$toast.info("Access token requested", {
-          icon: "vpn_key"
-        });
-      } catch (e) {
-        this.$toast.error(e, {
-          icon: "code"
-        });
+    async handleAccessTokenRequest(){
+      const tokenReqParams = {
+        grantType: this.grantType,
+        // callbackUrl: this.callbackUrl,
+        authUrl: this.authUrl,
+        accessTokenUrl: this.accessTokenUrl,
+        clientId: this.clientId,
+        clientSecret: this.clientSecret,
+        scope: this.scope,
+        clientAuth: this.clientAuth
+      };
+      await tokenRequest(tokenReqParams);
+      // try {
+      //   let random = tokenRequest(tokenReqParams, 10);
+      //   this.$toast.info(`Access token requested: ${random}`, {
+      //     icon: "vpn_key"
+      //   });
+      // } catch (e) {
+      //   this.$toast.error(e, {
+      //     icon: "code"
+      //   });
+      // }
+    },
+    async oauthRedirectReq() {
+      let tokenInfo = await oauthRedirect();
+      if(tokenInfo.hasOwnProperty('access_token')) {
+        this.accessToken = tokenInfo.access_token;
       }
     },
     switchVisibility() {
@@ -2388,7 +2450,7 @@ export default {
           this.httpPassword = "";
           this.bearerToken = "";
           this.accessToken = "";
-          this.showToken = false;
+          this.showTokenRequest = false;
           break;
         case "headers":
           this.headers = [];
@@ -2399,13 +2461,11 @@ export default {
         case "access_token":
           this.accessTokenName = "";
           this.grantType = "code";
-          this.callbackUrl = "";
           this.authUrl = "";
           this.accessTokenUrl = "";
           this.clientId = "";
           this.clientSecret = "";
           this.scope = "";
-          this.state = "";
           this.clientAuth = "header";
           break;
         default:
@@ -2494,10 +2554,20 @@ export default {
     },
     //TODO
     grantChange(){},
-    saveAccessTokens(){
+    saveToken(){
       try {
-        this.$toast.info("Access tokens saved");
-        this.showAccessTokenCollections = false;
+        this.$toast.info("Access token saved");
+        this.showTokenList = false;
+      } catch (e) {
+        this.$toast.error(e, {
+          icon: "code"
+        });
+      }
+    },
+    saveTokenRequest(){
+      try {
+        this.$toast.info("Token request saved");
+        this.showTokenRequestList = false;
       } catch (e) {
         this.$toast.error(e, {
           icon: "code"
@@ -2523,7 +2593,7 @@ export default {
       }
     }
   },
-  mounted() {
+  async mounted() {
     this.observeRequestButton();
     this._keyListener = function(e) {
       if (e.key === "g" && (e.ctrlKey || e.metaKey)) {
@@ -2541,6 +2611,7 @@ export default {
       }
     };
     document.addEventListener("keydown", this._keyListener.bind(this));
+    await this.oauthRedirectReq();
   },
   created() {
     this.urlExcludes = this.$store.state.postwoman.settings.URL_EXCLUDES || {
